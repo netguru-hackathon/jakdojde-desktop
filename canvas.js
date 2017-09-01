@@ -23,7 +23,9 @@ const drawHotspots = (ctx, canvasSize, coords) => {
   ctx.fillStyle = 'black';
   coords.map(translateCoords(canvasSize))
     .forEach(({ x, y }) => {
-      ctx.fillRect(x, y, 3, 3);
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, 2 * Math.PI);
+      ctx.fill();
     });
 }
 
