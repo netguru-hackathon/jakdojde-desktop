@@ -1,29 +1,38 @@
 'use strict';
 
-document.addEventListener('DOMContentLoaded', function(){
-	const ctx = document.getElementById('canvas').getContext('2d');
-	// ctx.fillRect(10, 10, 100, 100);
+const mappedData = [
+	{x: 13, y: 73},
+	{x: 8, y: 6},
+	{x: 67, y: 13},
+	{x: 50, y: 45},
+	{x: 89, y: 11},
+];
 
-	const mappedData = [
-		{x: 13, y: 73},
-		{x: 8, y: 6},
-		{x: 67, y: 13},
-		{x: 50, y: 45},
-		{x: 89, y: 11},
-	];
+const translateCoords = canvasSize => {
+  const transform = canvasSize / 100;
 
-	function translateCoords({ x, y }) {
-		return { x: x*4, y: y*4 };
-	}
+  return ({ x, y }) => ({ x: x * transform, y: y * transform });
+};
 
-	function drawHotspots(coords) {
-		ctx.clearRect(0, 0, 400, 400);
-		ctx.fillStyle = 'black';
-		coords.map(translateCoords).forEach(({x, y}) => {
-			ctx.fillRect(x, y, 3, 3);
-		});
-	}
+const clearCanvas = (ctx, size) => {
+  ctx.clearRect(0, 0, size, size);
+}
 
-	drawHotspots(mappedData);
+const drawHotspots = (ctx, canvasSize, coords) => {
+  clearCanvas(ctx, canvasSize);
+  ctx.fillStyle = 'black';
+  coords.map(translateCoords(canvasSize))
+    .forEach(({ x, y }) => {
+      ctx.fillRect(x, y, 3, 3);
+    });
+}
 
-}, false);
+const canvas = () => {
+  const canvas = document.getElementById('canvas')
+  const ctx = canvas.getContext('2d');
+  const canvasSize = Number(canvas.getAttribute('width'));
+
+  drawHotspots(ctx, canvasSize, mappedData);
+}
+
+document.addEventListener('DOMContentLoaded', canvas);
