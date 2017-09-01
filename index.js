@@ -3,7 +3,7 @@
 const {app} = require('electron');
 const scanner = require('eddystone-beacon-scanner');
 const EddystoneTrayIcon = require('./eddystone-trayicon');
-const SCANNING_INTERVAL = 1000 * 30;
+const SCANNING_INTERVAL = 1000;
 
 app.on('window-all-closed', function () {
   clearTimeout(app.scanTimer);
@@ -22,25 +22,27 @@ app.on('ready', function () {
   });
 
   scanner.on('found', function(beacon) {
+    if (!beacon.url) return;
     console.log('beacon has been found:', beacon.url);
     app.trayIcon.add(beacon);
   });
 
   scanner.on('updated', function(beacon) {
+    if (!beacon.url) return;
     console.log('beacon has been update:', beacon.url);
     app.trayIcon.add(beacon);
   });
 
   scanner.on('lost', function(beacon) {
     console.log('beacon has been lost:', beacon);
-    app.trayIcon.clear();
+    app.trayIcon.remove(beacon);
   });
 
   scanner.startScanning();
 
   app.scanTimer = setInterval(function () {
     console.log('Start beacon scanning');
-    app.trayIcon.clear();
+    // app.trayIcon.clear();
     scanner.startScanning();
   }, SCANNING_INTERVAL);
 });

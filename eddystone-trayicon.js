@@ -1,61 +1,70 @@
 'use strict';
 
-const {Menu, Tray, shell} = require('electron');
+const { Menu, Tray, shell } = require('electron');
 // const shell = require('shell');
 
-function EddystoneTrayIcon(opts) {
-  opts = opts || {};
+class EddystoneTrayIcon {
+  constructor(opts) {
+    opts = opts || {};
 
-  this.trayIcon = new Tray(opts.iconForNotFound);
+    this.trayIcon = new Tray(opts.iconForNotFound);
 
-  if (opts.toolTip) {
-    this.trayIcon.setToolTip(opts.toolTip);
+    if (opts.toolTip) {
+      this.trayIcon.setToolTip(opts.toolTip);
+    }
+
+    if (opts.iconForPressed) {
+      this.trayIcon.setPressedImage(opts.iconForPressed);
+    }
+
+    this.opts = opts;
+    this.beacons = [];
+    this.refresh();
   }
 
-  if (opts.iconForPressed) {
-    this.trayIcon.setPressedImage(opts.iconForPressed);
+  refresh() {
+    var contextMenu = null;
+
+    if (this.beacons.length > 0) {
+      // this.trayIcon.setImage(this.opts.iconForFound);
+
+      contextMenu = Menu.buildFromTemplate(this.beacons.map(function (beacon) {
+        return {
+          label: [
+            (beacon.url || '').replace('https://', ''), ': ', beacon.distance,
+          ].join(' '),
+          click: function () {
+            shell.openExternal(beacon.url);
+          }
+        };
+      }));
+    } else {
+      // this.trayIcon.setImage(this.opts.iconForNotFound);
+
+      contextMenu = Menu.buildFromTemplate([{label: 'Not found'}]);
+    }
+
+    this.trayIcon.setContextMenu(contextMenu);
   }
 
-  this.opts = opts;
-  this.beacons = [];
-  this.refresh();
+  add(beacon) {
+    const existingBeacon = this.beacons.find(b => b.url === beacon.url);
+    if (existingBeacon) {
+      Object.assign(existingBeacon, beacon);
+    } else {
+      this.beacons.push(beacon);
+    }
+    this.refresh();
+  }
+
+  remove(beacon) {
+    this.beacons = this.beacons.filter(b => b.url !== beacon.url);
+  }
+
+  clear(beacon) {
+    // this.beacons = [];
+    // this.refresh();
+  }
 }
-
-EddystoneTrayIcon.prototype.refresh = function () {
-  var contextMenu = null;
-
-  if (this.beacons.length > 0) {
-    this.trayIcon.setImage(this.opts.iconForFound);
-
-    contextMenu = Menu.buildFromTemplate(this.beacons.map(function (beacon) {
-      return {
-        label: [
-          beacon.url, ',', 'RX Power:',
-          beacon.txPower, ',', 'RSSI',
-          beacon.rssi
-        ].join(' '),
-        click: function () {
-          shell.openExternal(beacon.url);
-        }
-      };
-    }));
-  } else {
-    this.trayIcon.setImage(this.opts.iconForNotFound);
-
-    contextMenu = Menu.buildFromTemplate([{label: 'Not found'}]);
-  }
-
-  this.trayIcon.setContextMenu(contextMenu);
-};
-
-EddystoneTrayIcon.prototype.add = function (beacon) {
-  this.beacons.push(beacon);
-  this.refresh();
-};
-
-EddystoneTrayIcon.prototype.clear = function (beacon) {
-  this.beacons = [];
-  this.refresh();
-};
 
 module.exports = EddystoneTrayIcon;
