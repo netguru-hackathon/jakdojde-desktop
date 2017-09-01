@@ -6,37 +6,34 @@ const EddystoneBeaconScanner = require('eddystone-beacon-scanner');
 const beaconsListEl = document.getElementById('beacons-list');
 let beacons = [];
 
-EddystoneBeaconScanner.on('found', function(beacon) {
+function handleNewBeacon(beacon) {
   const { url } = beacon;
 
-  let foundBeacon = beacons.find(beacon => {
-    if (beacon.url === url) return beacon;
-  });
+  const foundBeacon = beacons.find(beacon => beacon.url === url);
 
-  if (!foundBeacon) {
-    beacons.push(beacon);
+  if (foundBeacon) {
+    Object.assign(foundBeacon, beacon);
   } else {
+    beacons.push(beacon);
   }
+}
 
+EddystoneBeaconScanner.on('found', function(beacon) {
+  handleNewBeacon(beacon);
   displayBeacons();
 });
 
 EddystoneBeaconScanner.on('updated', function(beacon) {
-  console.log(beacon);
-  const { distance, url } = beacon;
-
-  let foundBeacon = beacons.find(beacon => {
-    if (beacon.url === url) return beacon;
-  });
-
-  const foundBeaconIndex = beacons.indexOf(foundBeacon);
-
-  beacons[foundBeaconIndex].distance = distance;
-
+  handleNewBeacon(beacon);
   displayBeacons();
 });
 
 EddystoneBeaconScanner.startScanning(true);
+
+setInterval(function () {
+  console.log('Start beacon scanning');
+  EddystoneBeaconScanner.startScanning();
+}, 500);
 
 function displayBeacons() {
   beaconsListEl.innerHTML = '';
@@ -45,7 +42,8 @@ function displayBeacons() {
     const { distance, url } = beacon;
     const listEl = document.createElement('li');
 
-    listEl.innerText = `${url} is ${distance} away from here`;
+    const label = `${url.replace('https://', '')} is ${distance.toFixed(2)}m from here`;
+    listEl.innerText = label;
 
     beaconsListEl.appendChild(listEl);
   });
